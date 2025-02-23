@@ -1,0 +1,34 @@
+BCD-SERVICES
+
+    - accounts
+
+        - migrations
+            - _init_.py
+
+        - _init_.py
+        - admin.py
+        - apps.py
+        - managers.py
+        - models.py
+        - tests.py
+        - views.py
+    
+    - backend_site
+
+        - _pycache_
+            - __init__.cpython-312.pyc
+            - settings.cpython-312.pyc
+            - urls.cpython-312.pyc
+            - wsgi.cpython-312.pyc
+        
+        - _init_.py
+        - asgi.py
+        - settings.py
+        - urls.py
+        - wsgi.py
+    
+    - my_env
+    - BCD-Scaffolding.txt
+    - db.sqlite3
+    - manage.py
+
