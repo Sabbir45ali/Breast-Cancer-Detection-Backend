@@ -62,8 +62,12 @@ python manage.py makemigrations
 python manage.py migrate
 python manage.py createsuperuser
 
+Step 9: If Your Migration Folder Is Not Created Then Run , 
 
-Step 9: Run the Development Server
+python manage.py makemigrations accounts
+python manage.py migrate accounts
+
+Step 10: Run the Development Server
 
 python manage.py runserver
 
