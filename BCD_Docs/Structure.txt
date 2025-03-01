@@ -1,0 +1,26 @@
+project/
+├── backend/
+│   ├── app.py
+│   ├── requirements.txt
+│   ├── model/
+│   │   ├── model.h5
+│   │   ├── model.json
+│   │   └── preprocess.py
+│   └── utils/
+│       └── __init__.py
+├── frontend/
+│   ├── public/
+│   │   ├── index.html
+│   │   └── favicon.ico
+│   ├── src/
+│   │   ├── components/
+│   │   │   └── FileUpload.js
+│   │   ├── pages/
+│   │   │   └── HomePage.js
+│   │   ├── api/
+│   │   │   └── api.js
+│   │   ├── App.js
+│   │   └── index.js
+│   ├── package.json
+│   └── .env
+└── README.md

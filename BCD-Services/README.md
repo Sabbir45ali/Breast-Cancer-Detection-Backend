@@ -34,41 +34,30 @@ source venv/bin/activate
 
 Step 4: Install Required Dependencies
 
-pip install -r requirments.txt
+pip install -r requirements.txt
 
-If showing error then run ,
-
-python -m pip install -r requirments.txt
-
-Step 5: If showing 'Could Not Import Django' then run ,
-
-pip install django
-
-Step 6: Register the App in settings.py if not registered
+Step 5: Register the App in settings.py if not registered
 
 Edit settings.py and add the app to INSTALLED_APPS:
 
 INSTALLED_APPS = [
     'accounts.apps.AppNameConfig',
-
+    'rest_framework',
+    'corsheaders',
 ]
 
-Step 7: Apply Migrations and Create a Superuser
+Step 8: Apply Migrations and Create a Superuser
 
 python manage.py makemigrations
 python manage.py migrate
 python manage.py createsuperuser
 
-Step 8 : If showing error in ImageFiled then run , 
-
-pip install pillow
-
-Step 8: If Your Migration Folder Is Not Created Then Run , 
+Step 9: If Your Migration Folder Is Not Created Then Run , 
 
 python manage.py makemigrations accounts
 python manage.py migrate accounts
 
-Step 9: Run the Development Server
+Step 10: Run the Development Server
 
 python manage.py runserver
 
