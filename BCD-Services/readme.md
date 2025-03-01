@@ -59,9 +59,11 @@ python manage.py makemigrations
 python manage.py migrate
 python manage.py createsuperuser
 
-Step 8 : If showing error in ImageFiled then run , 
+
+Step 8 : If showing any error regarding 'ImageField' the run ,
 
 pip install pillow
+
 
 Step 8: If Your Migration Folder Is Not Created Then Run , 
 
@@ -73,6 +75,3 @@ Step 9: Run the Development Server
 python manage.py runserver
 
 Access the application at http://127.0.0.1:8000/
-
-
-
