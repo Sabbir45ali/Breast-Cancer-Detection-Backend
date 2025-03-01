@@ -59,10 +59,6 @@ python manage.py makemigrations
 python manage.py migrate
 python manage.py createsuperuser
 
-Step 8 : If showing error in ImageFiled then run , 
-
-pip install pillow
-
 Step 8: If Your Migration Folder Is Not Created Then Run , 
 
 python manage.py makemigrations accounts
