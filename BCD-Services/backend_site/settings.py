@@ -63,20 +63,16 @@ TEMPLATES = [
 
 WSGI_APPLICATION = 'backend_site.wsgi.application'
 
-
 # Database
 # https://docs.djangoproject.com/en/5.1/ref/settings/#databases
 
 DATABASES = {
     'default': {
-        'ENGINE': 'django.db.backends.mysql',
-        'NAME': 'breastcancer',
-        'USER': 'root', 
-        'PASSWORD': '',
-        'HOST' : '127.0.0.1',
-        'PORT' : 3306
+        'ENGINE': 'django.db.backends.sqlite3',
+        'NAME': BASE_DIR / "db.sqlite3",
     }
 }
+
 
 
 # Password validation
@@ -120,6 +116,3 @@ STATIC_URL = 'static/'
 
 DEFAULT_AUTO_FIELD = 'django.db.models.BigAutoField'
 
-# FOR IMAGES 
-MEDIA_URL = '/media/'  
-MEDIA_ROOT = os.path.join(BASE_DIR, 'media') 

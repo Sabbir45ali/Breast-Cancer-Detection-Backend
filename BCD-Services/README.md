@@ -14,10 +14,9 @@ Ensure you have the following installed before proceeding:
 
 -> Installation and Setup
 
-Step 1: Create a Project Directory
+Step 1: Go into Project Directory
 
-mkdir project_name
-cd project_name
+cd BCD-Services
 
 Step 2: Create a Virtual Environment
 
@@ -27,7 +26,7 @@ Step 3: Activate the Virtual Environment
 
 Windows:
 
-venv\Scripts\activate
+myenv\Scripts\activate
 
 macOS/Linux:
 
@@ -37,21 +36,12 @@ Step 4: Install Required Dependencies
 
 pip install -r requirements.txt
 
-Step 5: Create a Django Project
-
-django-admin startproject project_name .
-
-Step 6: Create a Django App
-
-cd project_name
-python manage.py startapp app_name
-
-Step 7: Register the App in settings.py
+Step 5: Register the App in settings.py if not registered
 
 Edit settings.py and add the app to INSTALLED_APPS:
 
 INSTALLED_APPS = [
-    'app_name.apps.AppNameConfig',
+    'accounts.apps.AppNameConfig',
     'rest_framework',
     'corsheaders',
 ]
