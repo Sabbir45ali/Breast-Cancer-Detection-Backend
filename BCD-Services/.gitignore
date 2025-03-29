@@ -1,1 +1,18 @@
-myenv
+# Ignore virtual environment
+myenv/
+
+# Ignore IDE-specific files (PyCharm, VS Code, etc.)
+.idea/
+.vscode/
+
+# Ignore Python cache files
+__pycache__/
+*.pyc
+*.pyo
+*.pyd
+
+# Ignore database files
+*.sqlite3
+
+# Ignore migrations cache (optional)
+migrations/__pycache__/
