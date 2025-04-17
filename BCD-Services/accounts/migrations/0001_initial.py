@@ -1,6 +1,4 @@
-
 from django.db import migrations, models
-
 
 class Migration(migrations.Migration):
 
@@ -21,9 +19,9 @@ class Migration(migrations.Migration):
                 ('Mail_id', models.EmailField(max_length=254, unique=True)),
                 ('Password', models.CharField(max_length=255)),
                 ('Profile_Pic', models.ImageField(blank=True, null=True, upload_to='profile_pics/')),
-                
             ],
-            
+        ),
+        migrations.CreateModel(
             name='ImageUpload',
             fields=[
                 ('id', models.BigAutoField(auto_created=True, primary_key=True, serialize=False, verbose_name='ID')),
