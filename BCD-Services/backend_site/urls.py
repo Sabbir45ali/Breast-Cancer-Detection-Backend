@@ -1,5 +1,7 @@
 from django.contrib import admin
+from django.contrib import admin
 from django.urls import path, include
+
 from rest_framework_simplejwt.views import (
     TokenObtainPairView,
     TokenRefreshView,
@@ -7,6 +9,8 @@ from rest_framework_simplejwt.views import (
 
 urlpatterns = [
     path('admin/', admin.site.urls),
+    
+    path('accounts/', include('accounts.urls')),
     
     # Your app's custom URLs like signup
     path('auth/', include('auth_app.urls')),
