@@ -5,10 +5,13 @@ myenv/
 .idea/
 .vscode/
 
+#db sets
 db.sqlite
 # OR
 db.sqlite3
 
+# Ignore image files
+media/ 
 # Ignore Python cache files
 __pycache__/
 *.pyc
@@ -20,3 +23,6 @@ __pycache__/
 
 # Ignore migrations cache (optional)
 migrations/__pycache__/
+
+__pycache__/
+*.pyc
