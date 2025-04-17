@@ -1,3 +1,10 @@
+from django.urls import path
+from .views import ImageUploadView
+
+urlpatterns = [
+    path('memo-image/', ImageUploadView.as_view(), name='upload-image'),
+]
+
 from django.urls import path, include
 from rest_framework.routers import DefaultRouter
 from .views import PersonalDetailsViewSet

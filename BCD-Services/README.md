@@ -39,7 +39,7 @@ pip install -r requirements.txt
 ```
 If an error occurs, try:
 ```bash
-python -m pip install -r requirements.txt
+python -m pip install -r requirments.txt
 ```
 
 ### Step 5: Install Django if Not Installed
