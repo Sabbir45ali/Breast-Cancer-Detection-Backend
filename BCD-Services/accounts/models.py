@@ -20,3 +20,12 @@ class ImageUpload(models.Model):
 
     def __str__(self):
         return self.name
+
+class CancerData(models.Model):
+    radius_mean = models.FloatField()
+    texture_mean = models.FloatField()
+    area_mean = models.FloatField()
+    smoothness_mean = models.FloatField()
+    compactness_mean = models.FloatField()
+    concavity_mean = models.FloatField()
+    submitted_at = models.DateTimeField(auto_now_add=True)
