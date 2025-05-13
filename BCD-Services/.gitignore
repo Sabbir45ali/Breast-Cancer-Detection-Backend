@@ -12,10 +12,10 @@ myenv/
 # IDE settings
 .idea/
 .vscode/
-
+#Need some more changes
 # SQLite databases
 *.sqlite3
-db.sqlite3
+db.sqlite3s
 
 # Media
 media/
