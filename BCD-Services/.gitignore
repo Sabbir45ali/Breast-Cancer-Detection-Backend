@@ -1,28 +1,24 @@
-# Ignore virtual environment
-myenv/
-
-# Ignore IDE-specific files (PyCharm, VS Code, etc.)
-.idea/
-.vscode/
-
-#db sets
-db.sqlite
-# OR
-db.sqlite3
-
-# Ignore image files
-media/ 
-# Ignore Python cache files
+# Python cache files
 __pycache__/
 *.pyc
 *.pyo
 *.pyd
+*.cpython-*
 
-# Ignore database files
+# Virtual environments
+venv/
+myenv/
+
+# IDE settings
+.idea/
+.vscode/
+
+# SQLite databases
 *.sqlite3
+db.sqlite3
 
-# Ignore migrations cache (optional)
+# Media
+media/
+
+# Django migration cache
 migrations/__pycache__/
-
-__pycache__/
-*.pyc
