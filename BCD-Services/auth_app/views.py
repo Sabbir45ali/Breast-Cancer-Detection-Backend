@@ -3,7 +3,34 @@ from django.contrib.auth.models import User
 from django.contrib.auth import authenticate
 from django.http import JsonResponse
 from rest_framework.authtoken.models import Token
+from django.core.exceptions import ValidationError
 import json
+
+# Import your custom validators
+from accounts.validator import (
+    MinimumLengthValidator,
+    UppercaseLetterValidator,
+    LowercaseLetterValidator,
+    DigitValidator,
+    SymbolValidator
+)
+
+# Helper function to validate password
+def validate_password(password):
+    validators = [
+        MinimumLengthValidator(),
+        UppercaseLetterValidator(),
+        LowercaseLetterValidator(),
+        DigitValidator(),
+        SymbolValidator()
+    ]
+    errors = []
+    for validator in validators:
+        try:
+            validator.validate(password)
+        except ValidationError as e:
+            errors.append(e.messages[0])  # get first error message
+    return errors
 
 @csrf_exempt  # Only for testing! Use proper CSRF handling in production
 def signup_view(request):
@@ -11,6 +38,7 @@ def signup_view(request):
         try:
             data = json.loads(request.body)
             username = data.get("username")
+            phnumber = data.get("number")
             email = data.get("email")
             password = data.get("password")
 
@@ -20,6 +48,11 @@ def signup_view(request):
 
             if User.objects.filter(email=email).exists():
                 return JsonResponse({"error": "Email already registered"}, status=400)
+
+            # Validate password using custom validators
+            password_errors = validate_password(password)
+            if password_errors:
+                return JsonResponse({"error": "Password validation failed", "details": password_errors}, status=400)
 
             # Create new user
             user = User.objects.create_user(username=username, email=email, password=password)
@@ -35,6 +68,7 @@ def signup_view(request):
             return JsonResponse({"error": "Invalid JSON"}, status=400)
 
     return JsonResponse({"error": "Only POST requests are allowed"}, status=405)
+
 
 @csrf_exempt
 def login_view(request):

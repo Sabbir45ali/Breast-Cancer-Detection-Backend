@@ -1,6 +1,6 @@
 from rest_framework import serializers
 from .models import PersonalDetails
-from .validators import MinimumLengthValidator, UppercaseLetterValidator, LowercaseLetterValidator, DigitValidator, SymbolValidator
+from .validator import MinimumLengthValidator, UppercaseLetterValidator, LowercaseLetterValidator, DigitValidator, SymbolValidator
 from django.contrib.auth.hashers import make_password
 from django.core.exceptions import ValidationError
 

@@ -12,7 +12,6 @@ myenv/
 # IDE settings
 .idea/
 .vscode/
-#Need some more changes
 # SQLite databases
 *.sqlite3
 db.sqlite3s
@@ -20,5 +19,13 @@ db.sqlite3s
 # Media
 media/
 
+=======
+
+# SQLite databases
+*.sqlite3
+db.sqlite3
+
+# Media
+media/
 # Django migration cache
 migrations/__pycache__/
