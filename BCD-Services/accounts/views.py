@@ -6,7 +6,13 @@ from rest_framework.views import APIView
 from django.core.exceptions import ObjectDoesNotExist
 from .models import PersonalDetails, ImageUpload
 from .serializers import PersonalDetailsSerializer, ImageUploadSerializer
+from .serializers import ImageUploadSerializer
+from django.views.decorators.csrf import csrf_exempt
+from django.http import JsonResponse
+import json
+from .models import CancerData
 
+from rest_framework.parsers import MultiPartParser, FormParser
 
 @api_view(['GET', 'POST'])
 def personal_details_view(request):
@@ -21,12 +27,6 @@ def personal_details_view(request):
             serializer.save()
             return Response({"message": "Personal details created successfully", "data": serializer.data}, status=status.HTTP_201_CREATED)
         return Response(serializer.errors, status=status.HTTP_400_BAD_REQUEST)
-
-from .serializers import ImageUploadSerializer
-from django.views.decorators.csrf import csrf_exempt
-from django.http import JsonResponse
-import json
-from .models import CancerData
 
 
 
@@ -54,27 +54,19 @@ def personal_detail_view(request, user_id):
 
 
 class ImageUploadView(APIView):
+    parser_classes = (MultiPartParser, FormParser)  # ✅ Required for file uploads
+
     def post(self, request, format=None):
         serializer = ImageUploadSerializer(data=request.data)
         if serializer.is_valid():
-            serializer.save()
-
-            return Response(
-                {
-                    "message": "Image uploaded successfully",
-                    "data": serializer.data,
-                },
-                status=status.HTTP_201_CREATED,
-            )
-        return Response(serializer.errors, status=status.HTTP_400_BAD_REQUEST)
-
+            instance = serializer.save()
+            print(">>> File stored at:", instance.image.url)  # Should now be Cloudinary URL
             return Response({
-                'message': 'Image uploaded successfully',
-                'data': serializer.data
+                "message": "Image uploaded successfully",
+                "url": instance.image.url,
+                "data": serializer.data
             }, status=status.HTTP_201_CREATED)
         return Response(serializer.errors, status=status.HTTP_400_BAD_REQUEST)
-
-@csrf_exempt
 
 def submit_cancer_data(request):
     if request.method == "POST":

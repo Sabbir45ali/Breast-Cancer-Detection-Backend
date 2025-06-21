@@ -20,5 +20,5 @@ class PersonalDetailsAdmin(admin.ModelAdmin):
 
 @admin.register(ImageUpload)
 class ImageUploadAdmin(admin.ModelAdmin):
-    list_display = ('id', 'name', 'image')
+    list_display = ('id', 'image')
     search_fields = ('name',)

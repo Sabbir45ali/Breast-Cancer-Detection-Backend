@@ -72,4 +72,5 @@ class PersonalDetailsSerializer(serializers.ModelSerializer):
 class ImageUploadSerializer(serializers.ModelSerializer):
     class Meta:
         model = ImageUpload
-        fields = ['id', 'name', 'image']
+        fields = ['title', 'image',]
+

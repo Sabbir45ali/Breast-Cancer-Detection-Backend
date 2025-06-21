@@ -1,5 +1,6 @@
 from django.db import models
 from django.core.validators import RegexValidator
+from cloudinary_storage.storage import MediaCloudinaryStorage
 
 
 class PersonalDetails(models.Model):
@@ -29,11 +30,9 @@ class PersonalDetails(models.Model):
 
 
 class ImageUpload(models.Model):
-    name = models.CharField(max_length=100)
-    image = models.ImageField(upload_to='uploads/')
+    title = models.CharField(max_length=100)
+    image = models.ImageField(storage=MediaCloudinaryStorage(), upload_to='uploads/')
 
-    def __str__(self):
-        return f"Image: {self.name}"
 
 
 class CancerData(models.Model):
