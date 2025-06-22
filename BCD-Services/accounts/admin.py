@@ -1,4 +1,5 @@
 from django.contrib import admin
+from .models import PersonalDetails, ImageUpload
 from .models import PersonalDetails
 
 @admin.register(PersonalDetails)
