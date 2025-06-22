@@ -8,19 +8,10 @@ __pycache__/
 # Virtual environments
 venv/
 myenv/
-#Conventional virtual environment names
-.env
+
 # IDE settings
 .idea/
 .vscode/
-# SQLite databases
-*.sqlite3
-db.sqlite3s
-
-# Media
-media/
-
-=======
 
 # SQLite databases
 *.sqlite3
@@ -28,5 +19,6 @@ db.sqlite3
 
 # Media
 media/
+
 # Django migration cache
 migrations/__pycache__/
