@@ -49,7 +49,6 @@ def signup_view(request):
 
     return JsonResponse({"error": "Only POST allowed"}, status=405)
 
-
 @csrf_exempt
 def login_view(request):
     if request.method == "POST":
