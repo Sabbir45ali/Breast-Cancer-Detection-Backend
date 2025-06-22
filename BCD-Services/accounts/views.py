@@ -9,8 +9,10 @@ from django.contrib.auth.hashers import make_password
 
 from .serializers import PersonalDetailsSerializer, ImageUploadSerializer
 from .models import ImageUpload
-from firebase_config import db
 
+# Importing from firebase_config.py
+from firebase_config import db
+# For generating unique user ID
 import uuid
 
 @api_view(['GET', 'POST'])
@@ -92,7 +94,7 @@ def personal_detail_view(request, user_id):
         return Response({"message": "User deleted successfully"}, status=status.HTTP_204_NO_CONTENT)
 
 
-# API for uploading image (uses DRF APIView)
+
 class ImageUploadView(APIView):
     parser_classes = (MultiPartParser, FormParser)
 
@@ -109,12 +111,12 @@ class ImageUploadView(APIView):
         return Response(serializer.errors, status=status.HTTP_400_BAD_REQUEST)
 
 
-# API for submitting cancer data
+
 @csrf_exempt
 def submit_cancer_data(request):
     if request.method == "POST":
         try:
-            # Add your cancer data handling logic here
+
             return JsonResponse({"message": "Cancer data submitted successfully"})
         except Exception as e:
             return JsonResponse({"error": str(e)}, status=500)

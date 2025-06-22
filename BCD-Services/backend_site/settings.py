@@ -20,13 +20,14 @@ INSTALLED_APPS = [
     'django.contrib.messages',
     'django.contrib.staticfiles',
 
-    # Your apps
     'accounts.apps.AccountsConfig',
     'auth_app',
 
-    # Third-party apps
     'rest_framework',
     'rest_framework.authtoken',
+    
+    'cloudinary',
+    'cloudinary_storage',
 ]
 CLOUDINARY_STORAGE = {
     'CLOUD_NAME': config('CLOUDINARY_CLOUD_NAME'),

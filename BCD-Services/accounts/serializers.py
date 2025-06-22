@@ -6,10 +6,10 @@ from .models import ImageUpload
 
 
 class PersonalDetailsSerializer(serializers.Serializer):
-    # Optional user ID
+    # Create a unique ID if not provided
     User_id = serializers.CharField(required=False)
 
-    # Required fields
+    # All other fields
     First_Name = serializers.CharField(max_length=255)
     Middle_Name = serializers.CharField(max_length=255, required=False, allow_blank=True, allow_null=True)
     Last_Name = serializers.CharField(max_length=255)
@@ -17,14 +17,14 @@ class PersonalDetailsSerializer(serializers.Serializer):
     Phone_no = serializers.CharField(
         max_length=20,
         validators=[
-            RegexValidator(regex=r'^\+?\d{10,15}$', message="Enter a valid phone number.")
+            RegexValidator(regex=r'^\+?\d{10,13}$', message="Enter a valid phone number.")
         ]
     )
 
     Mail_id = serializers.EmailField()
     password = serializers.CharField(write_only=True)
 
-    # Validate password strength
+    # Validate password 
     def validate_password(self, value):
         errors = []
         if len(value) < 8:
@@ -41,14 +41,21 @@ class PersonalDetailsSerializer(serializers.Serializer):
             raise serializers.ValidationError(errors)
         return value
 
-    # Validate duplicate phone number in Firebase
+    # Validate unique Phone number
     def validate_Phone_no(self, value):
+        # 1. Enforce valid phone number format: +91XXXXXXXXXX or just 10-13 digits
+        regex = r'^\+?\d{10,12}$'
+        validator = RegexValidator(regex=regex, message="Enter a valid phone number.")
+        validator(value)  # Manually apply
+
+        # 2. Check for uniqueness from Firebase
         users = db.child("personal_details").get()
         if users.each():
             for user in users.each():
                 user_data = user.val()
                 if user_data and user_data.get("Phone_no") == value:
                     raise serializers.ValidationError("Phone number already exists.")
+
         return value
 
 

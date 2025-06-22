@@ -22,3 +22,6 @@ media/
  
 # Django migration cache
 migrations/__pycache__/
+
+# Secret environment variables
+.env

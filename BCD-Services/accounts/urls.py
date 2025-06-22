@@ -2,6 +2,7 @@ from django.urls import path
 from django.conf import settings
 from django.conf.urls.static import static
 
+# Imported views for URL Routing
 from .views import (
     ImageUploadView,
     personal_details_view,
@@ -16,5 +17,4 @@ urlpatterns = [
     path('personal-details/<str:user_id>/', personal_detail_view, name='personal-detail'),
 ]
 
-# Serve media files during development
 urlpatterns += static(settings.MEDIA_URL, document_root=settings.MEDIA_ROOT)
