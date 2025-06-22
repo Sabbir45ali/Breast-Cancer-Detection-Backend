@@ -6,9 +6,15 @@ from django.conf.urls.static import static
 
 router = DefaultRouter()
 router.register(r'personal-details', PersonalDetailsViewSet)
-
+from .views import (
+    personal_details_view,
+    personal_detail_view,
+    ImageUploadView
+)
 urlpatterns = [
-    path('memo-image/', ImageUploadView.as_view(), name='upload-image'),
+    path('personal-details/', personal_details_view, name='personal-details'),
+    path('personal-details/<str:user_id>/', personal_detail_view, name='personal-detail'),
     path('', include(router.urls)),
-    path('cancer-data/', submit_cancer_data, name='submit-cancer-data'),
-] + static(settings.MEDIA_URL, document_root=settings.MEDIA_ROOT)
+    path('memo-image/', ImageUploadView.as_view(), name='upload-image'),
+]; 
+urlpatterns += static(settings.MEDIA_URL, document_root=settings.MEDIA_ROOT)
