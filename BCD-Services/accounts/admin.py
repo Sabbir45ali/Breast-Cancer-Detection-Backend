@@ -1,7 +1,6 @@
 from django.contrib import admin
 from .models import PersonalDetails, ImageUpload
 
-
 @admin.register(PersonalDetails)
 class PersonalDetailsAdmin(admin.ModelAdmin):
     list_display = ('User_id', 'First_Name', 'Last_Name', 'Mail_id', 'Phone_no')
@@ -20,5 +19,5 @@ class PersonalDetailsAdmin(admin.ModelAdmin):
 
 @admin.register(ImageUpload)
 class ImageUploadAdmin(admin.ModelAdmin):
-    list_display = ('id', 'name', 'image')
+    list_display = ('id', 'image')
     search_fields = ('name',)

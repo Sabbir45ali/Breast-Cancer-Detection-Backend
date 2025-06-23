@@ -1,11 +1,14 @@
 import os
 from pathlib import Path
+from decouple import config
 
 BASE_DIR = Path(__file__).resolve().parent.parent
 
-SECRET_KEY = 'django-insecure-n6(rql2@u)6)je3yw&m5c01a6x$f!=mdqx9s@wd8s$s&!!2aat'
 
-DEBUG = True
+SECRET_KEY = config("SECRET_KEY")
+DEBUG = config("DEBUG", cast=bool)
+
+ALLOWED_HOSTS = config("ALLOWED_HOSTS").split(",")
 
 ALLOWED_HOSTS = []
 
@@ -17,15 +20,25 @@ INSTALLED_APPS = [
     'django.contrib.messages',
     'django.contrib.staticfiles',
 
-    # Your apps
     'accounts.apps.AccountsConfig',
     'auth_app',
 
-    # Third-party apps
     'rest_framework',
     'rest_framework.authtoken',
+    
+    'cloudinary',
+    'cloudinary_storage',
 ]
+CLOUDINARY_STORAGE = {
+    'CLOUD_NAME': config('CLOUDINARY_CLOUD_NAME'),
+    'API_KEY': config('CLOUDINARY_API_KEY'),
+    'API_SECRET': config('CLOUDINARY_API_SECRET'),
+}
 
+DEFAULT_FILE_STORAGE = 'cloudinary_storage.storage.MediaCloudinaryStorage'
+
+MEDIA_URL = '/media/'  # optional
+MEDIA_ROOT = os.path.join(BASE_DIR, 'media')  # optional
 MIDDLEWARE = [
     'django.middleware.security.SecurityMiddleware',
     'django.contrib.sessions.middleware.SessionMiddleware',
