@@ -63,10 +63,25 @@ python manage.py migrate
 python manage.py createsuperuser
 ```
 
-### Step 8: Install Pillow (If You Encounter ImageField Errors)
-```bash
+### Step 8: Install Missing Dependencies (If Errors Occur)
+
+Sometimes during setup, you may encounter errors related to missing or incompatible packages.
+Here’s how to fix the most common ones:
+
+---
+
+# For image uploads (Django ImageField)
 pip install pillow
-```
+
+# If setuptools-related errors occur (e.g., pkg_resources not found)
+pip install setuptools==68.2.2
+
+# For Firebase (avoid urllib3 > 2.0 to prevent pyrebase issues)
+pip install pyrebase4==4.8.0
+pip install urllib3==1.26.20
+pip install requests-toolbelt==0.10.1
+
+---
 
 ### Step 9: Ensure the Migration Folder Exists
 If your migration folder is missing, run:

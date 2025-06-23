@@ -1,23 +1,44 @@
-asgiref==3.8.1  
-certifi==2025.1.31  
-cffi==1.17.1  
-charset-normalizer==3.4.1  
-cryptography==44.0.1  
-dj-rest-auth==7.0.1  
-Django==5.1.6  
-django-allauth==65.4.1  
-django-cors-headers==4.7.0  
-djangorestframework==3.15.2  
+# Core Python and HTTP libraries
+asgiref==3.8.1                  
+certifi==2025.1.31             
+cffi==1.17.1                    
+charset-normalizer==3.4.1       
+cryptography==44.0.1            
+
+# Django and related tools
+Django==5.1.6                   
+sqlparse==0.5.3                 
+tzdata==2025.1
+
+# Django REST API support
+djangorestframework==3.15.2   
+dj-rest-auth==7.0.1             
+django-allauth==65.4.1         
 djangorestframework-simplejwt==5.4.0  
-idna==3.10  
-pip==23.2.1  
-pycparser==2.22  
-PyJWT==2.10.1  
-requests==2.32.3  
-sqlparse==0.5.3  
-tzdata==2025.1  
-urllib3==2.3.0
-cloudinary==1.37.0  
+
+# Firebase support
+firebase-admin==6.9.0           
+pyrebase4==4.8.0               
+python-decouple==3.8            
+
+# Cloudinary for image storage
+cloudinary==1.37.0              
 django-cloudinary-storage==0.3.0  
-pyrebase4==4.5.0  
-python-decouple==3.8
+pillow==10.3.0                 
+
+# Network & auth dependencies
+requests==2.32.3               
+urllib3==1.26.20                
+requests-toolbelt==0.10.1       
+PyJWT==2.10.1                   
+
+# Utility dependencies
+idna==3.10                     
+pycparser==2.22           
+
+# CORS handling
+django-cors-headers==4.7.0      
+
+# Tooling
+setuptools==68.2.2            
+pip==23.2.1                     

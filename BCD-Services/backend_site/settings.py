@@ -6,6 +6,7 @@ from decouple import config
 
 BASE_DIR = Path(__file__).resolve().parent.parent
 
+
 SECRET_KEY = config("SECRET_KEY")
 DEBUG = config("DEBUG", cast=bool)
 
@@ -20,13 +21,14 @@ INSTALLED_APPS = [
     'django.contrib.messages',
     'django.contrib.staticfiles',
 
-    # Your apps
     'accounts.apps.AccountsConfig',
     'auth_app',
 
-    # Third-party apps
     'rest_framework',
     'rest_framework.authtoken',
+    
+    'cloudinary',
+    'cloudinary_storage',
 ]
 CLOUDINARY_STORAGE = {
     'CLOUD_NAME': config('CLOUDINARY_CLOUD_NAME'),

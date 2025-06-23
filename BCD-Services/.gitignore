@@ -20,6 +20,9 @@ db.sqlite3
 
 # Media files
 media/
+ 
+# Django migration cache
+migrations/__pycache__/
 
-# Migrations cache
-**/migrations/__pycache__/
+# Secret environment variables
+.env
