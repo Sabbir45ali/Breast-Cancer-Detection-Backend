@@ -1,5 +1,6 @@
 # Python cache files
 __pycache__/
+*.py[cod]
 *.pyc
 *.pyo
 *.pyd
@@ -16,9 +17,9 @@ myenv/
 # SQLite databases
 *.sqlite3
 db.sqlite3
- 
-# Media
+
+# Media files
 media/
- 
-# Django migration cache
-migrations/__pycache__/
+
+# Migrations cache
+**/migrations/__pycache__/
