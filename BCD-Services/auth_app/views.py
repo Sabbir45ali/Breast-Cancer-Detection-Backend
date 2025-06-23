@@ -9,8 +9,6 @@ sys.path.append(BASE_DIR)  # parent directory of auth_app
 from firebase_config import db
 
 
-
-
 @csrf_exempt
 def signup_view(request):
     if request.method == "POST":
@@ -49,7 +47,8 @@ def signup_view(request):
 
     return JsonResponse({"error": "Only POST allowed"}, status=405)
 
-@csrf_exempt
+
+@csrf_exempt  # ❗ Only for development/testing
 def login_view(request):
     if request.method == "POST":
         data = json.loads(request.body)
