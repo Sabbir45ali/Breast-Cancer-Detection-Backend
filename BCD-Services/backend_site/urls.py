@@ -14,6 +14,7 @@ urlpatterns = [
     
     # Your app's custom URLs like signup
     path('auth/', include('auth_app.urls')),
+
     path('form/', include('accounts.urls')),  # Add this
     # 🔐 JWT Token endpoints (Login + Refresh)
     path('auth/token/', TokenObtainPairView.as_view(), name='token_obtain_pair'),  # Login

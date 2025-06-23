@@ -1,106 +1,74 @@
-from django.contrib.auth import authenticate, get_user_model
-from django.http import JsonResponse
-from rest_framework.authtoken.models import Token
-from django.views.decorators.csrf import csrf_exempt
-from django.core.exceptions import ValidationError
 import json
-
-# Get the custom or default user model
-User = get_user_model()
-
-# Import your custom validators
-from accounts.validator import (
-    MinimumLengthValidator,
-    UppercaseLetterValidator,
-    LowercaseLetterValidator,
-    DigitValidator,
-    SymbolValidator
-)
-
-# Password validation helper
-def validate_password(password):
-    validators = [
-        MinimumLengthValidator(),
-        UppercaseLetterValidator(),
-        LowercaseLetterValidator(),
-        DigitValidator(),
-        SymbolValidator()
-    ]
-    errors = []
-    for validator in validators:
-        try:
-            validator.validate(password)
-        except ValidationError as e:
-            errors.append(e.messages[0])  # First error message
-    return errors
+from django.http import JsonResponse
+from django.views.decorators.csrf import csrf_exempt
+from django.contrib.auth.hashers import make_password, check_password
+from .serializers import SignupSerializer, LoginSerializer
+import sys, os
+BASE_DIR = os.path.dirname(os.path.dirname(__file__))
+sys.path.append(BASE_DIR)  # parent directory of auth_app
+from firebase_config import db
 
 
-@csrf_exempt  # ❗ Only for development/testing — use proper CSRF protection in production
+@csrf_exempt
 def signup_view(request):
     if request.method == "POST":
-        try:
-            data = json.loads(request.body)
-            username = data.get("username")
-            phnumber = data.get("number")
-            email = data.get("email")
-            password = data.get("password")
+        data = json.loads(request.body)
+        serializer = SignupSerializer(data=data)
 
-            if not all([username, email, password, phnumber]):
-                return JsonResponse({"error": "All fields are required"}, status=400)
+        if not serializer.is_valid():
+            return JsonResponse({"error": serializer.errors}, status=400)
 
-            if User.objects.filter(username=username).exists():
+        username = serializer.validated_data["username"]
+        phnumber = serializer.validated_data["phnumber"]
+        email = serializer.validated_data["email"]
+        raw_password = serializer.validated_data["password"]
+
+        # Check for existing username/email/phone
+        all_users = db.child("user_login_details").get().val() or {}
+        for user in all_users.values():
+            if user.get("username") == username:
                 return JsonResponse({"error": "Username already exists"}, status=400)
-            if User.objects.filter(email=email).exists():
-                return JsonResponse({"error": "Email already registered"}, status=400)
+            if user.get("email") == email:
+                return JsonResponse({"error": "Email already exists"}, status=400)
+            if user.get("phnumber") == phnumber:
+                return JsonResponse({"error": "Phone number already exists"}, status=400)
 
-            password_errors = validate_password(password)
-            if password_errors:
-                return JsonResponse({
-                    "error": "Password validation failed",
-                    "details": password_errors
-                }, status=400)
+        # Save new user with hashed password
+        hashed_password = make_password(raw_password)
+        new_user = {
+            "username": username,
+            "phnumber": phnumber,
+            "email": email,
+            "password": hashed_password,
+        }
+        db.child("user_login_details").push(new_user)
 
-            user = User.objects.create_user(
-                username=username,
-                email=email,
-                password=password
-            )
+        return JsonResponse({"message": "Signup successful"}, status=201)
 
-            token = Token.objects.create(user=user)
-
-            return JsonResponse({
-                "message": "User created successfully",
-                "token": token.key
-            }, status=201)
-
-        except Exception as e:
-            return JsonResponse({"error": str(e)}, status=500)
-
-    return JsonResponse({"error": "Only POST requests are allowed"}, status=405)
+    return JsonResponse({"error": "Only POST allowed"}, status=405)
 
 
 @csrf_exempt  # ❗ Only for development/testing
 def login_view(request):
     if request.method == "POST":
-        try:
-            data = json.loads(request.body)
-            username = data.get("username")
-            password = data.get("password")
+        data = json.loads(request.body)
+        serializer = LoginSerializer(data=data)
 
-            if not username or not password:
-                return JsonResponse({"error": "Username and password are required"}, status=400)
+        if not serializer.is_valid():
+            return JsonResponse({"error": serializer.errors}, status=400)
 
-            user = authenticate(username=username, password=password)
-            if user is not None:
-                token, _ = Token.objects.get_or_create(user=user)
-                return JsonResponse({
-                    "message": "Login successful",
-                    "token": token.key
-                }, status=200)
-            else:
-                return JsonResponse({"error": "Invalid credentials"}, status=401)
+        username = serializer.validated_data["username"]
+        raw_password = serializer.validated_data["password"]
 
-        except Exception as e:
-            return JsonResponse({"error": str(e)}, status=500)
+        # Fetch all users
+        all_users = db.child("user_login_details").get().val() or {}
+        for user in all_users.values():
+            if user.get("username") == username:
+                hashed_password = user.get("password")
+                if check_password(raw_password, hashed_password):
+                    return JsonResponse({"message": "Login successful"}, status=200)
+                return JsonResponse({"error": "Invalid password"}, status=401)
 
-    return JsonResponse({"error": "Only POST requests are allowed"}, status=405)
+        return JsonResponse({"error": "User not found"}, status=404)
+
+    return JsonResponse({"error": "Only POST allowed"}, status=405)
