@@ -1,5 +1,6 @@
 # Python cache files
 __pycache__/
+*.py[cod]
 *.pyc
 *.pyo
 *.pyd
@@ -11,17 +12,20 @@ __pycache__/
 # Virtual environments
 venv/
 myenv/
-
+ 
 # IDE settings
 .idea/
 .vscode/
-
+ 
 # SQLite databases
 *.sqlite3
 db.sqlite3
 
-# Media
+# Media files
 media/
-
+ 
 # Django migration cache
 migrations/__pycache__/
+
+# Secret environment variables
+.env
