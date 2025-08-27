@@ -50,7 +50,7 @@ def signup_view(request):
 
 @csrf_exempt  # ❗ Only for development/testing
 def login_view(request):
-    if request.method == "GET":
+    if request.method == "POST":
         data = json.loads(request.body)
         serializer = LoginSerializer(data=data)
 
@@ -71,4 +71,4 @@ def login_view(request):
 
         return JsonResponse({"error": "User not found"}, status=404)
 
-    return JsonResponse({"error": "Only GET allowed"}, status=405)
+    return JsonResponse({"error": "Only POST allowed"}, status=405)
