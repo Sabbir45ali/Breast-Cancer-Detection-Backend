@@ -1,44 +1,80 @@
 # Core Python and HTTP libraries
-asgiref==3.8.1                  
-certifi==2025.1.31             
-cffi==1.17.1                    
-charset-normalizer==3.4.1       
-cryptography==44.0.1            
+asgiref==3.8.1
+certifi==2025.6.15
+cffi==1.17.1
+charset-normalizer==3.4.2
+cryptography==45.0.4
+idna==3.10
+pycparser==2.22
 
 # Django and related tools
-Django==5.1.6                   
-sqlparse==0.5.3                 
-tzdata==2025.1
+Django==5.2
+sqlparse==0.5.3
+tzdata==2025.2
 
 # Django REST API support
-djangorestframework==3.15.2   
-dj-rest-auth==7.0.1             
-django-allauth==65.4.1         
-djangorestframework-simplejwt==5.4.0  
+djangorestframework==3.16.0
+djangorestframework-simplejwt==5.5.0
 
 # Firebase support
-firebase-admin==6.9.0           
-pyrebase4==4.8.0               
-python-decouple==3.8            
+firebase-admin==6.9.0
+Pyrebase4==4.8.0
+python-decouple==3.8
 
 # Cloudinary for image storage
-cloudinary==1.37.0              
-django-cloudinary-storage==0.3.0  
-pillow==10.3.0                 
+cloudinary==1.44.1
+django-cloudinary-storage==0.3.0
+pillow==11.2.1
 
 # Network & auth dependencies
-requests==2.32.3               
-urllib3==1.26.20                
-requests-toolbelt==0.10.1       
-PyJWT==2.10.1                   
+requests==2.32.4
+urllib3==1.26.20
+requests-toolbelt==0.10.1
+PyJWT==2.9.0
 
 # Utility dependencies
-idna==3.10                     
-pycparser==2.22           
+setuptools==80.9.0
+pip==25.1.1
 
-# CORS handling
-django-cors-headers==4.7.0      
+# Google/Firebase Cloud dependencies
+gcloud==0.18.3
+google-api-core==2.25.1
+google-api-python-client==2.173.0
+google-auth==2.40.3
+google-auth-httplib2==0.2.0
+google-cloud-core==2.4.3
+google-cloud-firestore==2.21.0
+google-cloud-storage==3.1.1
+google-crc32c==1.7.1
+google-resumable-media==2.7.2
+googleapis-common-protos==1.70.0
+grpcio==1.73.0
+grpcio-status==1.73.0
+oauth2client==4.1.3
+jwcrypto==1.5.6
+pyasn1==0.6.1
+pyasn1_modules==0.4.2
+proto-plus==1.26.1
+protobuf==6.31.1
+rsa==4.9.1
+python-jwt==4.1.0
+six==1.17.0
+typing_extensions==4.14.0
+uritemplate==4.2.0
 
-# Tooling
-setuptools==68.2.2            
-pip==23.2.1                     
+# Others / Tooling
+anyio==4.9.0
+CacheControl==0.14.3
+cachetools==5.5.2
+h11==0.16.0
+h2==4.2.0
+hpack==4.1.0
+httpcore==1.0.9
+httplib2==0.22.0
+httpx==0.28.1
+hyperframe==6.1.0
+msgpack==1.1.1
+pycryptodome==3.23.0
+pyparsing==3.2.3
+sniffio==1.3.1
+
