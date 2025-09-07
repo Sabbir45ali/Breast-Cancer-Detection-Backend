@@ -318,14 +318,13 @@ def reset_password(request):
     except json.JSONDecodeError:
         return JsonResponse({"error": "Invalid JSON body"}, status=400)
 
-    # Validate request data
+    # Validate request data - Adjust serializer to expect only email and new_password now
     serializer = ResetPasswordSerializer(data=data)
     if not serializer.is_valid():
         return JsonResponse({"errors": serializer.errors}, status=400)
 
     email = serializer.validated_data["email"]
-    otp = serializer.validated_data["otp"]
-    new_password = serializer.validated_data["new_password"]  
+    new_password = serializer.validated_data["new_password"]
 
     # Ensure password is hashed (in case serializer didn’t hash)
     if not new_password.startswith("pbkdf2_"):
@@ -333,22 +332,7 @@ def reset_password(request):
 
     email_key = email.replace(".", "_")
 
-    # Fetch OTP data
-    otp_data = db.child("password_resets").child(email_key).get().val()
-    if not otp_data:
-        return JsonResponse({"error": "No OTP found or expired"}, status=400)
-
-    if int(time.time()) > otp_data.get("expiry", 0):
-        db.child("password_resets").child(email_key).remove()
-        return JsonResponse({"error": "OTP expired. Request again."}, status=400)
-
-    if str(otp_data.get("otp")) != str(otp):
-        return JsonResponse({"error": "Invalid OTP"}, status=400)
-
-    if not otp_data.get("verified", False):
-        return JsonResponse({"error": "OTP not verified yet"}, status=400)
-
-    # ✅ Update password in whichever section user belongs
+    # Directly update password without OTP validation
     updated = False
     for section in ["user_login_details", "org_login_details", "admin_login_details"]:
         if db.child(section).child(email_key).get().val():
@@ -359,10 +343,8 @@ def reset_password(request):
     if not updated:
         return JsonResponse({"error": "Account not found"}, status=404)
 
-    # Remove OTP
-    db.child("password_resets").child(email_key).remove()
-
     return JsonResponse({"message": "Password reset successful"}, status=200)
+
 
 
 @csrf_exempt
