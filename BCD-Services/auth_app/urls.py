@@ -7,7 +7,7 @@ from .views import (
 )
 
 urlpatterns = [
-    # User routes
+
     path("signup-user/", signup_user, name="signup_user"),
     path("login-user/", login_user, name="login_user"),
 
