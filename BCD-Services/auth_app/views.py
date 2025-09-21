@@ -1,24 +1,66 @@
 import json
 import random
 import time
-import string
-from rest_framework.decorators import api_view
-from rest_framework.response import Response
-from rest_framework import status
-from datetime import timedelta
-from django.core.mail import send_mail
-from django.utils import timezone
+import os
+import sys
+
 from django.conf import settings
 from django.http import JsonResponse
 from django.views.decorators.csrf import csrf_exempt
 from django.contrib.auth.hashers import make_password, check_password
-from .serializers import SignupSerializer, LoginSerializer,OrgSignupSerializer,OrgLoginSerializer,VerifyOTPSerializer,ResetPasswordSerializer,ForgotPasswordSerializer
-import sys, os
+from django.contrib.auth.models import User
+from django.core.mail import send_mail
+
+from rest_framework.decorators import api_view, permission_classes
+from rest_framework.permissions import AllowAny
+from rest_framework.response import Response
+from rest_framework import status
+from rest_framework_simplejwt.tokens import RefreshToken
+
+from firebase_admin import auth as firebase_auth
+from firebase_config import db, firebase, admin_auth
+
+from .serializers import (
+    SignupSerializer, LoginSerializer,
+    OrgSignupSerializer, OrgLoginSerializer,
+    VerifyOTPSerializer, ResetPasswordSerializer, ForgotPasswordSerializer,
+)
+
+# Add project root for firebase_config
 BASE_DIR = os.path.dirname(os.path.dirname(__file__))
-sys.path.append(BASE_DIR)  # parent directory of auth_app
+sys.path.append(BASE_DIR)
+from firebase_config import db, firebase, admin_auth
+
+
+import json
+import random
+import time
+import string
+from datetime import timedelta
+from django.conf import settings
+from django.core.mail import send_mail
+from django.http import JsonResponse
+from django.views.decorators.csrf import csrf_exempt
+from django.utils import timezone
+from django.contrib.auth.hashers import make_password, check_password
+from django.contrib.auth.models import User
+from rest_framework.decorators import api_view, permission_classes
+from rest_framework.permissions import AllowAny, IsAuthenticated
+from rest_framework.response import Response
+from rest_framework import status
+from rest_framework_simplejwt.tokens import RefreshToken
+from firebase_admin import auth as firebase_auth
+from .serializers import SignupSerializer, LoginSerializer, OrgSignupSerializer, OrgLoginSerializer, VerifyOTPSerializer, ResetPasswordSerializer, ForgotPasswordSerializer
+import sys, os
+
+BASE_DIR = os.path.dirname(os.path.dirname(__file__))
+sys.path.append(BASE_DIR)
 from firebase_config import db
 
+# ---------------- SIGNUP USER ----------------
 @csrf_exempt
+@api_view(["POST"])
+@permission_classes([AllowAny])
 def signup_user(request):
     if request.method != "POST":
         return JsonResponse({"error": "Only POST allowed"}, status=405)
@@ -37,15 +79,12 @@ def signup_user(request):
     email = serializer.validated_data["email"]
     raw_password = serializer.validated_data["password"]
 
-    # ✅ Create Firebase-safe key
     email_key = email.replace(".", "_")
 
-    # ✅ Check if this email already exists
     existing_user = db.child("user_login_details").child(email_key).get().val()
     if existing_user:
         return JsonResponse({"error": "Email already exists"}, status=400)
 
-    # ✅ Check username/phone uniqueness (loop required)
     all_users = db.child("user_login_details").get().val() or {}
     for user in all_users.values():
         if user.get("username") == username:
@@ -53,7 +92,6 @@ def signup_user(request):
         if user.get("phnumber") == phnumber:
             return JsonResponse({"error": "Phone number already exists"}, status=400)
 
-    # ✅ Save new user with hashed password
     hashed_password = make_password(raw_password)
     new_user = {
         "username": username,
@@ -61,12 +99,41 @@ def signup_user(request):
         "email": email,
         "password": hashed_password,
     }
-
     db.child("user_login_details").child(email_key).set(new_user)
 
-    return JsonResponse({"message": "Signup successful"}, status=201)
+    try:
+        # Create Firebase user
+        firebase_user = firebase_auth.create_user(
+            email=email,
+            password=raw_password,
+            display_name=username,
+            phone_number=f"+91{phnumber}" if phnumber else None
+        )
 
+        # Store extra data in Firebase Realtime DB
+        db.child("user_login_details").child(email_key).update({
+            "firebase_uid": firebase_user.uid
+        })
+
+        # Create Django user if not exists
+        django_user, created = User.objects.get_or_create(
+            username=email,
+            defaults={"email": email}
+        )
+        if created:
+            django_user.set_password(raw_password)
+            django_user.save()
+
+        return JsonResponse({"message": "Signup successful", "brr": firebase_user.uid}, status=201)
+
+    except Exception as e:
+        return JsonResponse({"error": str(e)}, status=400)
+
+
+# ---------------- LOGIN USER ----------------
 @csrf_exempt
+@api_view(["POST"])
+@permission_classes([AllowAny])
 def login_user(request):
     if request.method != "POST":
         return JsonResponse({"error": "Only POST allowed"}, status=405)
@@ -82,7 +149,6 @@ def login_user(request):
     if not email or not raw_password:
         return JsonResponse({"error": "Email and password are required"}, status=400)
 
-    # ✅ Use email_key instead of looping
     email_key = email.replace(".", "_")
     user = db.child("user_login_details").child(email_key).get().val()
 
@@ -90,16 +156,40 @@ def login_user(request):
         return JsonResponse({"error": "User not found"}, status=404)
 
     hashed_password = user.get("password")
-    if check_password(raw_password, hashed_password):
-        return JsonResponse({"message": "Login successful"}, status=200)
+    if not check_password(raw_password, hashed_password):
+        return JsonResponse({"error": "Invalid password"}, status=401)
 
-    return JsonResponse({"error": "Invalid password"}, status=401)
+    try:
+        # Authenticate with Firebase
+        firebase_user = firebase_auth.get_user_by_email(email)
+        uid = firebase_user.uid
+
+        # Ensure Django user exists
+        django_user, created = User.objects.get_or_create(
+            username=email,
+            defaults={"email": email}
+        )
+        if created:
+            django_user.set_password(raw_password)
+            django_user.save()
+
+        refresh = RefreshToken.for_user(django_user)
+
+        return JsonResponse({
+            "message": "Login successful",
+            "brr": uid,
+            "access": str(refresh.access_token),
+            "refresh": str(refresh)
+        }, status=200)
+
+    except Exception as e:
+        return JsonResponse({"error": str(e)}, status=401)
 
 
-
-
-
+# ---------------- SIGNUP ORG ----------------
 @csrf_exempt
+@api_view(["POST"])
+@permission_classes([AllowAny])
 def signup_org(request):
     if request.method != "POST":
         return JsonResponse({"error": "Only POST allowed"}, status=405)
@@ -120,10 +210,8 @@ def signup_org(request):
     license_number = serializer.validated_data["license_number"]
     raw_password = serializer.validated_data["password"]
 
-    # ✅ Use email as key
     email_key = email.replace(".", "_")
 
-    # Check for duplicates directly in DB
     if db.child("org_login_details").child(email_key).get().val():
         return JsonResponse({"error": "Email already exists"}, status=400)
 
@@ -136,22 +224,50 @@ def signup_org(request):
         if org.get("license_number") == license_number:
             return JsonResponse({"error": "License/Registration number already exists"}, status=400)
 
-    # Save with hashed password
+    hashed_password = make_password(raw_password)
     new_org = {
         "org_name": org_name,
         "phnumber": phnumber,
         "email": email,
         "org_type": org_type,
         "license_number": license_number,
-        "password": make_password(raw_password),
+        "password": hashed_password,
     }
     db.child("org_login_details").child(email_key).set(new_org)
 
-    return JsonResponse({"message": "Organization signup successful"}, status=201)
+    try:
+        # Create Firebase user
+        firebase_user = firebase_auth.create_user(
+            email=email,
+            password=raw_password,
+            display_name=org_name,
+            phone_number=f"+91{phnumber}" if phnumber else None
+        )
+
+        # Store extra data in Firebase Realtime DB
+        db.child("org_login_details").child(email_key).update({
+            "firebase_uid": firebase_user.uid
+        })
+
+        # Create Django user if not exists
+        django_user, created = User.objects.get_or_create(
+            username=email,
+            defaults={"email": email}
+        )
+        if created:
+            django_user.set_password(raw_password)
+            django_user.save()
+
+        return JsonResponse({"message": "Organization signup successful", "brr": firebase_user.uid}, status=201)
+
+    except Exception as e:
+        return JsonResponse({"error": str(e)}, status=400)
 
 
-
+# ---------------- LOGIN ORG ----------------
 @csrf_exempt
+@api_view(["POST"])
+@permission_classes([AllowAny])
 def login_org(request):
     if request.method != "POST":
         return JsonResponse({"error": "Only POST allowed"}, status=405)
@@ -168,7 +284,6 @@ def login_org(request):
     email = serializer.validated_data["email"]
     raw_password = serializer.validated_data["password"]
 
-    # Use email as key
     email_key = email.replace(".", "_")
     org = db.child("org_login_details").child(email_key).get().val()
 
@@ -179,8 +294,53 @@ def login_org(request):
     if not hashed_password or not check_password(raw_password, hashed_password):
         return JsonResponse({"error": "Invalid password"}, status=401)
 
-    return JsonResponse({"message": "Organization login successful"}, status=200)
+    try:
+        # Authenticate with Firebase
+        firebase_user = firebase_auth.get_user_by_email(email)
+        uid = firebase_user.uid
 
+        # Ensure Django user exists
+        django_user, created = User.objects.get_or_create(
+            username=email,
+            defaults={"email": email}
+        )
+        if created:
+            django_user.set_password(raw_password)
+            django_user.save()
+
+        refresh = RefreshToken.for_user(django_user)
+
+        return JsonResponse({
+            "message": "Organization login successful",
+            "brr": uid,
+            "access": str(refresh.access_token),
+            "refresh": str(refresh)
+        }, status=200)
+
+    except Exception as e:
+        return JsonResponse({"error": str(e)}, status=401)
+
+
+# ---------------- REFRESH TOKEN ----------------
+from rest_framework_simplejwt.views import TokenRefreshView
+
+@csrf_exempt
+@api_view(["POST"])
+@permission_classes([AllowAny])
+def refresh_token(request):
+    return TokenRefreshView.as_view()(request._request)
+
+#-------------------- PROTECTED SITE (EXAMPLE) ----------------
+@api_view(["GET"])
+@permission_classes([IsAuthenticated])
+def protected_site(request):
+    user = request.user
+    return JsonResponse({
+        "message": "You have access to this protected site!",
+        "user_email": user.email
+    }, status=200)
+
+#----------------------- ADMIN LOGIN ----------------
 @csrf_exempt
 def login_admin(request):
     if request.method != "POST":
@@ -318,13 +478,14 @@ def reset_password(request):
     except json.JSONDecodeError:
         return JsonResponse({"error": "Invalid JSON body"}, status=400)
 
-    # Validate request data - Adjust serializer to expect only email and new_password now
+    # Validate request data
     serializer = ResetPasswordSerializer(data=data)
     if not serializer.is_valid():
         return JsonResponse({"errors": serializer.errors}, status=400)
 
     email = serializer.validated_data["email"]
-    new_password = serializer.validated_data["new_password"]
+    otp = serializer.validated_data["otp"]
+    new_password = serializer.validated_data["new_password"]  
 
     # Ensure password is hashed (in case serializer didn’t hash)
     if not new_password.startswith("pbkdf2_"):
@@ -332,7 +493,22 @@ def reset_password(request):
 
     email_key = email.replace(".", "_")
 
-    # Directly update password without OTP validation
+    # Fetch OTP data
+    otp_data = db.child("password_resets").child(email_key).get().val()
+    if not otp_data:
+        return JsonResponse({"error": "No OTP found or expired"}, status=400)
+
+    if int(time.time()) > otp_data.get("expiry", 0):
+        db.child("password_resets").child(email_key).remove()
+        return JsonResponse({"error": "OTP expired. Request again."}, status=400)
+
+    if str(otp_data.get("otp")) != str(otp):
+        return JsonResponse({"error": "Invalid OTP"}, status=400)
+
+    if not otp_data.get("verified", False):
+        return JsonResponse({"error": "OTP not verified yet"}, status=400)
+
+    # ✅ Update password in whichever section user belongs
     updated = False
     for section in ["user_login_details", "org_login_details", "admin_login_details"]:
         if db.child(section).child(email_key).get().val():
@@ -343,8 +519,10 @@ def reset_password(request):
     if not updated:
         return JsonResponse({"error": "Account not found"}, status=404)
 
-    return JsonResponse({"message": "Password reset successful"}, status=200)
+    # Remove OTP
+    db.child("password_resets").child(email_key).remove()
 
+    return JsonResponse({"message": "Password reset successful"}, status=200)
 
 
 @csrf_exempt

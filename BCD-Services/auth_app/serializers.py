@@ -109,7 +109,7 @@ class VerifyOTPSerializer(serializers.Serializer):
 class ResetPasswordSerializer(serializers.Serializer):
     email = serializers.EmailField()
     new_password = serializers.CharField(min_length=6, write_only=True)
-    otp = serializers.CharField(max_length=6, write_only=True, required=False, allow_blank=True)  # Make OTP optional
+    otp = serializers.CharField(max_length=6, write_only=True)  # OTP from user
 
     def validate_new_password(self, value):
         """
@@ -133,9 +133,7 @@ class ResetPasswordSerializer(serializers.Serializer):
         return make_password(value)  # hash password before sending to Firebase
 
     def validate_otp(self, value):
-        if value == '' or value is None:
-            # If OTP is not provided, simply ignore validation (since it's optional)
-            return value
         if not value.isdigit() or len(value) != 6:
             raise serializers.ValidationError("OTP must be a 6-digit number")
         return value
+
