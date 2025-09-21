@@ -8,7 +8,7 @@ __pycache__/
 *.pyd
 
 # Ignore model files
-*.joblib
+# *.joblib
 
 # Ignore dataset files (optional — only if you don't want to track data.csv)
 data.csv
