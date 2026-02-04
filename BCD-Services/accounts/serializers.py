@@ -1,6 +1,7 @@
 from rest_framework import serializers
 from django.core.validators import RegexValidator
-from firebase_config import db
+from firebase_admin_init import firebase_auth
+from firebase_admin import auth, db
 import re
 from .models import ImageUpload
 

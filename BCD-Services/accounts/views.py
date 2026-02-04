@@ -11,7 +11,7 @@ from .serializers import PersonalDetailsSerializer, ImageUploadSerializer
 from .models import ImageUpload
 
 # Importing from firebase_config.py
-from firebase_config import db
+from firebase_admin_init import firebase_auth
 # For generating unique user ID
 import uuid
 

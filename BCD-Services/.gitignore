@@ -29,3 +29,4 @@ migrations/__pycache__/
 
 # Secret environment variables
 .env
+firebase-service-account.json
