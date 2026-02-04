@@ -7,23 +7,54 @@ import string
 from rest_framework.decorators import api_view
 from rest_framework.response import Response
 from rest_framework import status
+from rest_framework_simplejwt.tokens import RefreshToken
+
+from firebase_admin import auth as firebase_auth
+from firebase_config import db, firebase, admin_auth
+
+from .serializers import (
+    SignupSerializer, LoginSerializer,
+    OrgSignupSerializer, OrgLoginSerializer,
+    VerifyOTPSerializer, ResetPasswordSerializer, ForgotPasswordSerializer,
+)
+
+# Add project root for firebase_config
+BASE_DIR = os.path.dirname(os.path.dirname(__file__))
+sys.path.append(BASE_DIR)
+from firebase_config import db, firebase, admin_auth
+
+
+import json
+import random
+import time
+import string
 from datetime import timedelta
-from django.core.mail import send_mail
-from django.utils import timezone
 from django.conf import settings
+from django.core.mail import send_mail
 from django.http import JsonResponse
 from firebase_admin import auth
 from firebase_config import db
 from django.views.decorators.csrf import csrf_exempt
+from django.utils import timezone
 from django.contrib.auth.hashers import make_password, check_password
-from .serializers import SignupSerializer, LoginSerializer,OrgSignupSerializer,OrgLoginSerializer,VerifyOTPSerializer,ResetPasswordSerializer,ForgotPasswordSerializer
+from django.contrib.auth.models import User
+from rest_framework.decorators import api_view, permission_classes
+from rest_framework.permissions import AllowAny, IsAuthenticated
+from rest_framework.response import Response
+from rest_framework import status
+from rest_framework_simplejwt.tokens import RefreshToken
+from firebase_admin import auth as firebase_auth
+from .serializers import SignupSerializer, LoginSerializer, OrgSignupSerializer, OrgLoginSerializer, VerifyOTPSerializer, ResetPasswordSerializer, ForgotPasswordSerializer
 import sys, os
+
 BASE_DIR = os.path.dirname(os.path.dirname(__file__))
-sys.path.append(BASE_DIR)  # parent directory of auth_app
+sys.path.append(BASE_DIR)
 from firebase_config import db
 
 @csrf_exempt
 @csrf_exempt
+@api_view(["POST"])
+@permission_classes([AllowAny])
 def signup_user(request):
     if request.method != "POST":
         return JsonResponse({"error": "Only POST allowed"}, status=405)
@@ -77,7 +108,14 @@ def signup_user(request):
     except Exception as e:
         return JsonResponse({"error": str(e)}, status=500)
 
+    except Exception as e:
+        return JsonResponse({"error": str(e)}, status=400)
+
+
+# ---------------- LOGIN USER ----------------
 @csrf_exempt
+@api_view(["POST"])
+@permission_classes([AllowAny])
 def login_user(request):
     if request.method != "POST":
         return JsonResponse({"error": "Only POST allowed"}, status=405)
@@ -115,6 +153,8 @@ def login_user(request):
 
 
 @csrf_exempt
+@api_view(["POST"])
+@permission_classes([AllowAny])
 def signup_org(request):
     if request.method != "POST":
         return JsonResponse({"error": "Only POST allowed"}, status=405)
@@ -173,6 +213,8 @@ def signup_org(request):
 
 
 @csrf_exempt
+@api_view(["POST"])
+@permission_classes([AllowAny])
 def login_org(request):
     if request.method != "POST":
         return JsonResponse({"error": "Only POST allowed"}, status=405)
@@ -361,13 +403,14 @@ def reset_password(request):
     except json.JSONDecodeError:
         return JsonResponse({"error": "Invalid JSON body"}, status=400)
 
-    # Validate request data - Adjust serializer to expect only email and new_password now
+    # Validate request data
     serializer = ResetPasswordSerializer(data=data)
     if not serializer.is_valid():
         return JsonResponse({"errors": serializer.errors}, status=400)
 
     email = serializer.validated_data["email"]
-    new_password = serializer.validated_data["new_password"]
+    otp = serializer.validated_data["otp"]
+    new_password = serializer.validated_data["new_password"]  
 
     # Ensure password is hashed (in case serializer didn’t hash)
     if not new_password.startswith("pbkdf2_"):
@@ -375,7 +418,22 @@ def reset_password(request):
 
     email_key = email.replace(".", "_")
 
-    # Directly update password without OTP validation
+    # Fetch OTP data
+    otp_data = db.child("password_resets").child(email_key).get().val()
+    if not otp_data:
+        return JsonResponse({"error": "No OTP found or expired"}, status=400)
+
+    if int(time.time()) > otp_data.get("expiry", 0):
+        db.child("password_resets").child(email_key).remove()
+        return JsonResponse({"error": "OTP expired. Request again."}, status=400)
+
+    if str(otp_data.get("otp")) != str(otp):
+        return JsonResponse({"error": "Invalid OTP"}, status=400)
+
+    if not otp_data.get("verified", False):
+        return JsonResponse({"error": "OTP not verified yet"}, status=400)
+
+    # ✅ Update password in whichever section user belongs
     updated = False
     for section in ["user_login_details", "org_login_details", "admin_login_details"]:
         if db.child(section).child(email_key).get().val():
@@ -386,8 +444,10 @@ def reset_password(request):
     if not updated:
         return JsonResponse({"error": "Account not found"}, status=404)
 
-    return JsonResponse({"message": "Password reset successful"}, status=200)
+    # Remove OTP
+    db.child("password_resets").child(email_key).remove()
 
+    return JsonResponse({"message": "Password reset successful"}, status=200)
 
 
 @csrf_exempt

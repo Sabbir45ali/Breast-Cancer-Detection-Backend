@@ -1,4 +1,7 @@
 from django.urls import path
+from rest_framework_simplejwt.views import TokenRefreshView
+from . import views
+
 from .views import (
     signup_user, login_user,
     signup_org, login_org,
@@ -7,6 +10,12 @@ from .views import (
 )
 
 urlpatterns = [
+    # JWT Token routes
+    path("token/refresh/", TokenRefreshView.as_view(), name="token_refresh"),
+    
+    # Protected route example
+    path('protected/', views.protected_site, name='protected_site'),
+    
     # User routes
     path("signup-user/", signup_user, name="signup_user"),
     path("login-user/", login_user, name="login_user"),
