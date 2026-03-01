@@ -1,0 +1,11 @@
+Backend - Joy, Ronit, Payal, Sabbir
+FrontEnd - Sabbir, Sayani, Prathama
+
+
+User 
+Basic landing page -> Registration and login page -> Rich data collection -> Image processing(mammography) -> final estimated result. 
+
+
+Admin 
+Admin login -> Admin dashboard -> Tunning of Parameters -> 
+
