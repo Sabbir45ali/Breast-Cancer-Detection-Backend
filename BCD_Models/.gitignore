@@ -1,0 +1,41 @@
+# Python
+__pycache__/
+*.pyc
+*.pyo
+*.pyd
+
+# Virtual Environment
+venv/
+env/
+myenv/
+
+# Django
+db.sqlite3
+media/
+staticfiles/
+
+# Environment Files
+.env
+firebase_config.json
+serviceAccountKey.json
+
+# OS Files
+.DS_Store
+Thumbs.db
+
+# IDE Files
+.vscode/
+.idea/
+
+# Logs
+*.log
+
+# Tensorflow Temp Files
+checkpoint
+*.h5
+
+# AWS Keys
+*.pem
+
+# Secrets
+secret_key.txt
