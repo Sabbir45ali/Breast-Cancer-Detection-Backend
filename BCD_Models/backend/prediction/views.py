@@ -23,7 +23,7 @@ api_secret=os.getenv("CLOUDINARY_API_SECRET")
 ###################################
 # ORG DATA PREDICTION API
 ###################################
-@api_view(['POST'])
+@api_view(['POST']) 
 @authentication_classes([FirebaseAuthentication])
 def org_predict_data(request):
     uid = request.user

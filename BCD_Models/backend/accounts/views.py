@@ -11,67 +11,69 @@ from backend.authentication import FirebaseAuthentication
 # USER SIGNUP
 ###################################
 @api_view(['POST'])
+@authentication_classes([FirebaseAuthentication])
 def user_signup(request):
+    uid = request.user  # comes from FirebaseAuthentication
     name = request.data.get('name')
     phone = request.data.get('phone')
     email = request.data.get('email')
-    password = request.data.get('password')
+
     try:
-        user = auth.create_user(
-            email=email,
-            password=password
-        )
-        uid = user.uid
-        db.collection("users").document(uid).set({
-            "uid":uid,
-            "role":"user",
-            "name":name,
-            "phone":phone,
-            "email":email
+        doc_ref = db.collection("users").document(uid)
+        if doc_ref.get().exists:
+            return Response({"message": "User already exists"})
+
+        doc_ref.set({
+            "uid": uid,
+            "role": "user",
+            "name": name,
+            "phone": phone,
+            "email": email
         })
+
         return Response({
-            "message":"User Signup Successful",
-            "uid":uid
+            "message": "User profile created successfully",
+            "uid": uid
         })
+
     except Exception as e:
-        return Response({
-            "error":str(e)
-        })
+        return Response({"error": str(e)})
         
 ###################################
 # ORGANIZATION SIGNUP
 ###################################
 @api_view(['POST'])
+@authentication_classes([FirebaseAuthentication])
 def org_signup(request):
+    uid = request.user
     org_name = request.data.get('org_name')
     phone = request.data.get('phone')
     email = request.data.get('email')
     org_type = request.data.get('type')
     license = request.data.get('license')
-    password = request.data.get('password')
+
     try:
-        user = auth.create_user(
-            email=email,
-            password=password
-        )
-        uid = user.uid
-        db.collection("organizations").document(uid).set({
-            "uid":uid,
-            "role":"org",
-            "org_name":org_name,
-            "phone":phone,
-            "email":email,
-            "type":org_type,
-            "license":license
+        doc_ref = db.collection("organizations").document(uid)
+        if doc_ref.get().exists:
+            return Response({"message": "Organization already exists"})
+
+        doc_ref.set({
+            "uid": uid,
+            "role": "org",
+            "org_name": org_name,
+            "phone": phone,
+            "email": email,
+            "type": org_type,
+            "license": license
         })
+
         return Response({
-            "message":"Organization Signup Successful",
-            "uid":uid
+            "message": "Organization profile created successfully",
+            "uid": uid
         })
+
     except Exception as e:
-        return Response({
-            "error":str(e)
-        })
+        return Response({"error": str(e)})
         
 ###################################
 # USER LOGIN
