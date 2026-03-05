@@ -1,9 +1,15 @@
+import os
 import firebase_admin
-from firebase_admin import credentials
-from firebase_admin import firestore
-from firebase_admin import auth
+from firebase_admin import credentials, firestore, auth
 
-cred = credentials.Certificate("serviceAccountKey.json")
+firebase_config = {
+    "type": "service_account",
+    "project_id": os.environ.get("FIREBASE_PROJECT_ID"),
+    "private_key": os.environ.get("FIREBASE_PRIVATE_KEY").replace("\\n", "\n"),
+    "client_email": os.environ.get("FIREBASE_CLIENT_EMAIL"),
+}
+
+cred = credentials.Certificate(firebase_config)
 
 firebase_admin.initialize_app(cred)
 
