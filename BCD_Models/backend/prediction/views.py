@@ -1,16 +1,20 @@
 from rest_framework.decorators import api_view, authentication_classes
 from rest_framework.response import Response
+
 from backend.authentication import FirebaseAuthentication
+
 from firebase_config import db
 from .data_model import predict_data
+from .image_model import predict_image
+
 from datetime import datetime
-from firebase_config import db
 import cloudinary
 import cloudinary.uploader
 import os
-from datetime import datetime
 import uuid
-from .image_model import predict_image
+
+from firebase_admin import firestore
+
 cloudinary.config(
 cloud_name=os.getenv("CLOUDINARY_CLOUD_NAME"),
 api_key=os.getenv("CLOUDINARY_API_KEY"),
@@ -19,7 +23,7 @@ api_secret=os.getenv("CLOUDINARY_API_SECRET")
 ###################################
 # ORG DATA PREDICTION API
 ###################################
-@api_view(['POST'])
+@api_view(['POST']) 
 @authentication_classes([FirebaseAuthentication])
 def org_predict_data(request):
     uid = request.user
@@ -152,4 +156,108 @@ def image_history(request):
             "confidence": data["confidence"],
             "timestamp": data["timestamp"]
         })
+    return Response(history)
+
+@api_view(['GET'])
+@authentication_classes([FirebaseAuthentication])
+def org_full_history(request):
+
+    uid = request.user
+
+    db = firestore.client()
+
+    history = []
+
+
+    ############################
+    # DATA HISTORY
+    ############################
+
+    data_docs = db.collection('prediction_results') \
+        .where('uid', '==', uid).stream()
+
+    for doc in data_docs:
+
+        d = doc.to_dict()
+
+        timestamp = d.get("timestamp")
+
+        # Convert timestamp safely
+        if timestamp:
+            try:
+                date = timestamp.isoformat()
+            except:
+                date = str(timestamp)
+        else:
+            date = ""
+
+        history.append({
+
+            "type": "data",
+
+            "date": date,
+
+            "result": d.get("result"),
+
+            "inputs": d.get("input")
+
+        })
+
+
+    ############################
+    # IMAGE HISTORY
+    ############################
+
+    img_docs = db.collection('image_results') \
+        .where('uid', '==', uid).stream()
+
+    for doc in img_docs:
+
+        d = doc.to_dict()
+
+        timestamp = d.get("timestamp")
+
+        # Convert timestamp safely
+        if timestamp:
+            try:
+                date = timestamp.isoformat()
+            except:
+                date = str(timestamp)
+        else:
+            date = ""
+
+        image_url = d.get("image_url", "")
+
+        # Extract image name from url
+        image_name = ""
+
+        if image_url:
+            import os
+            image_name = os.path.basename(image_url)
+
+        history.append({
+
+            "type": "image",
+
+            "date": date,
+
+            "result": d.get("result"),
+
+            "image_name": image_name,
+
+            "image_url": image_url   # ✅ Added image link
+
+        })
+
+
+    ############################
+    # SORT BY DATE
+    ############################
+
+    history.sort(
+        key=lambda x: x["date"] if x["date"] else "",
+        reverse=True
+    )
+
+
     return Response(history)
