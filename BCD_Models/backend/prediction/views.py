@@ -4,8 +4,7 @@ from rest_framework.response import Response
 from backend.authentication import FirebaseAuthentication
 
 from firebase_config import db
-from .data_model import predict_data
-from .image_model import predict_image
+import requests
 
 from datetime import datetime
 import cloudinary
@@ -14,6 +13,8 @@ import os
 import uuid
 
 from firebase_admin import firestore
+
+ML_SERVICE_URL = os.getenv("ML_SERVICE_URL", "http://127.0.0.1:8000")
 
 cloudinary.config(
 cloud_name=os.getenv("CLOUDINARY_CLOUD_NAME"),
@@ -35,7 +36,15 @@ def org_predict_data(request):
         })
     try:
         input_data = request.data
-        result, probability = predict_data(input_data)
+        
+        # PROXY: Forward request to ML API
+        response = requests.post(f"{ML_SERVICE_URL}/predict/data", json=input_data)
+        if response.status_code != 200:
+            return Response({"error": "Failed to get prediction from ML API"})
+            
+        ml_data = response.json()
+        result = ml_data.get("result")
+        probability = ml_data.get("probability")
         org_data = org_doc.to_dict()
         ###################################
         # SAVE TO FIREBASE
@@ -98,9 +107,21 @@ def predict_image_api(request):
             "error":"No image uploaded"
         })
     ###################################
-    # PREDICT
+    # PREDICT VIA ML MICROSERVICE
     ###################################
-    result,confidence = predict_image(image)
+    try:
+        image.seek(0)
+        files = {"image": (image.name, image.read(), image.content_type)}
+        response = requests.post(f"{ML_SERVICE_URL}/predict/image", files=files)
+        
+        if response.status_code != 200:
+            return Response({"error": f"Failed prediction: {response.text}"})
+            
+        ml_data = response.json()
+        result = ml_data.get("result")
+        confidence = ml_data.get("confidence")
+    except Exception as e:
+        return Response({"error": str(e)})
 
     # Reset file pointer (IMPORTANT FIX)
     image.seek(0)
