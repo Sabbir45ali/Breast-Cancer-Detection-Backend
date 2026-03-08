@@ -121,16 +121,26 @@ def predict_image_api(request):
         result = ml_data.get("result")
         confidence = ml_data.get("confidence")
     except Exception as e:
-        return Response({"error": str(e)})
+        return Response({"error": f"ML service error: {str(e)}"})
 
-    # Reset file pointer (IMPORTANT FIX)
-    image.seek(0)
+    ###################################
+    # UPLOAD TO CLOUDINARY
+    ###################################
+    try:
+        image.seek(0)
+        upload_result = cloudinary.uploader.upload(
+            image,
+            folder="breast_cancer_images"
+        )
+        image_url = upload_result['secure_url']
+    except Exception as e:
+        return Response({
+            "result": result,
+            "confidence": confidence,
+            "image_url": None,
+            "warning": f"Prediction succeeded but image upload failed: {str(e)}"
+        })
 
-    upload_result = cloudinary.uploader.upload(
-    image,
-    folder="breast_cancer_images"
-    )
-    image_url = upload_result['secure_url']
     ###################################
     # DETECT ROLE
     ###################################
@@ -140,14 +150,23 @@ def predict_image_api(request):
     ###################################
     # SAVE TO FIRESTORE
     ###################################
-    db.collection("image_results").add({
-        "uid":uid,
-        "role":role,
-        "image_url":image_url,
-        "result":result,
-        "confidence":confidence,
-        "timestamp":datetime.now()
-    })
+    try:
+        db.collection("image_results").add({
+            "uid":uid,
+            "role":role,
+            "image_url":image_url,
+            "image_name": image.name,
+            "result":result,
+            "confidence":confidence,
+            "timestamp":datetime.now()
+        })
+    except Exception as e:
+        return Response({
+            "result": result,
+            "confidence": confidence,
+            "image_url": image_url,
+            "warning": f"Prediction succeeded but history save failed: {str(e)}"
+        })
     ###################################
     return Response({
         "result":result,
