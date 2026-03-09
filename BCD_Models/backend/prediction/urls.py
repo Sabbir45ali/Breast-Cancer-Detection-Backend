@@ -4,7 +4,8 @@ from .views import (
     org_predict_data,
     org_history,
     image_history,
-    org_full_history
+    org_full_history,
+    debug_ml_service
 )
 urlpatterns = [
     path('predict-image/', predict_image_api),
@@ -12,4 +13,5 @@ urlpatterns = [
     path('org/history/', org_history),
     path('image-history/', image_history),
     path('org/full-history/', org_full_history),
+    path('debug-ml/', debug_ml_service),
 ]

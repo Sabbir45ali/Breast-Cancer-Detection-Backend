@@ -1,5 +1,6 @@
 from rest_framework.decorators import api_view, authentication_classes
 from rest_framework.response import Response
+from rest_framework import status
 
 from backend.authentication import FirebaseAuthentication
 
@@ -33,14 +34,14 @@ def org_predict_data(request):
     if not org_doc.exists:
         return Response({
             "error": "Only organizations allowed"
-        })
+        }, status=status.HTTP_403_FORBIDDEN)
     try:
         input_data = request.data
         
         # PROXY: Forward request to ML API
         response = requests.post(f"{ML_SERVICE_URL}/predict/data", json=input_data)
         if response.status_code != 200:
-            return Response({"error": "Failed to get prediction from ML API"})
+            return Response({"error": "Failed to get prediction from ML API"}, status=status.HTTP_502_BAD_GATEWAY)
             
         ml_data = response.json()
         result = ml_data.get("result")
@@ -65,7 +66,7 @@ def org_predict_data(request):
     except Exception as e:
         return Response({
             "error": str(e)
-        })
+        }, status=status.HTTP_500_INTERNAL_SERVER_ERROR)
         
 ###################################
 # ORG PREDICTION HISTORY API
@@ -105,7 +106,7 @@ def predict_image_api(request):
     if not image:
         return Response({
             "error":"No image uploaded"
-        })
+        }, status=status.HTTP_400_BAD_REQUEST)
     ###################################
     # PREDICT VIA ML MICROSERVICE
     ###################################
@@ -115,22 +116,32 @@ def predict_image_api(request):
         response = requests.post(f"{ML_SERVICE_URL}/predict/image", files=files)
         
         if response.status_code != 200:
-            return Response({"error": f"Failed prediction: {response.text}"})
+            return Response({"error": f"Failed prediction: {response.text}"}, status=status.HTTP_502_BAD_GATEWAY)
             
         ml_data = response.json()
         result = ml_data.get("result")
         confidence = ml_data.get("confidence")
     except Exception as e:
-        return Response({"error": str(e)})
+        return Response({"error": f"ML service error: {str(e)}"}, status=status.HTTP_502_BAD_GATEWAY)
 
-    # Reset file pointer (IMPORTANT FIX)
-    image.seek(0)
+    ###################################
+    # UPLOAD TO CLOUDINARY
+    ###################################
+    try:
+        image.seek(0)
+        upload_result = cloudinary.uploader.upload(
+            image,
+            folder="breast_cancer_images"
+        )
+        image_url = upload_result['secure_url']
+    except Exception as e:
+        return Response({
+            "result": result,
+            "confidence": confidence,
+            "image_url": None,
+            "warning": f"Prediction succeeded but image upload failed: {str(e)}"
+        })
 
-    upload_result = cloudinary.uploader.upload(
-    image,
-    folder="breast_cancer_images"
-    )
-    image_url = upload_result['secure_url']
     ###################################
     # DETECT ROLE
     ###################################
@@ -140,14 +151,23 @@ def predict_image_api(request):
     ###################################
     # SAVE TO FIRESTORE
     ###################################
-    db.collection("image_results").add({
-        "uid":uid,
-        "role":role,
-        "image_url":image_url,
-        "result":result,
-        "confidence":confidence,
-        "timestamp":datetime.now()
-    })
+    try:
+        db.collection("image_results").add({
+            "uid":uid,
+            "role":role,
+            "image_url":image_url,
+            "image_name": image.name,
+            "result":result,
+            "confidence":confidence,
+            "timestamp":datetime.now()
+        })
+    except Exception as e:
+        return Response({
+            "result": result,
+            "confidence": confidence,
+            "image_url": image_url,
+            "warning": f"Prediction succeeded but history save failed: {str(e)}"
+        })
     ###################################
     return Response({
         "result":result,
@@ -282,3 +302,23 @@ def org_full_history(request):
 
 
     return Response(history)
+
+###################################
+# DEBUG: Test ML Service Connection
+###################################
+@api_view(['GET'])
+def debug_ml_service(request):
+    """Debug endpoint to check ML_SERVICE_URL connectivity"""
+    ml_url = os.getenv("ML_SERVICE_URL", "NOT SET")
+    try:
+        response = requests.get(f"{ML_SERVICE_URL}/", timeout=10)
+        return Response({
+            "ml_service_url": ml_url,
+            "ml_service_status": response.status_code,
+            "ml_service_response": response.json()
+        })
+    except Exception as e:
+        return Response({
+            "ml_service_url": ml_url,
+            "ml_service_error": str(e)
+        }, status=status.HTTP_502_BAD_GATEWAY)
